@@ -94,16 +94,20 @@ function onLogin(success) {
 function onOffer(offer, name) {
     connectedUser = name;
     yourConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    alert("Tienes una videollamada...");
-    yourConnection.createAnswer(function(answer) {
-        yourConnection.setLocalDescription(answer);
-        send({
-            type: "answer",
-            answer: answer
+    var mjs_offer = confirm("Tienes una videollamada...");
+    if (mjs_offer){
+        yourConnection.createAnswer(function(answer) {
+            yourConnection.setLocalDescription(answer);
+            send({
+                type: "answer",
+                answer: answer
+            });
+        }, function(error) {
+            alert("An error has occurred");
         });
-    }, function(error) {
-        alert("An error has occurred");
-    });
+    } else {
+        alert("Has rechazado la video llamada");
+    }
 };
 
 function onAnswer(answer) {
