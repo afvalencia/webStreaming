@@ -1,14 +1,14 @@
 var yourVideo = document.querySelector('#yours'),
     theirVideo = document.querySelector('#theirs'),
-    yourConnection, connectedUser, my_stream;
+    yourConnection, connectedUser, stream, dataChannel;
 
 function startConnection() {
     if (hasUserMedia()) {
         navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true
-        }).then(function(stream){
-            my_stream = stream;
+        }).then(function(my_stream){
+            stream = my_stream;
             yourVideo.src = window.URL.createObjectURL(stream);
             if (hasRTCPeerConnection()) {
                 setupPeerConnection(stream);
@@ -27,9 +27,10 @@ function setupPeerConnection(stream) {
     var configuration = {
         "iceServers": [{
             "url": "stun:stun.1.google.com:19302"
+            //"url": "stun:127.0.0.1:9876"
         }]
     };
-    yourConnection = new RTCPeerConnection(configuration);
+    yourConnection = new RTCPeerConnection(configuration, {optional: [{RtpDataChannels: true}]});
     // Setup stream listening
     yourConnection.addStream(stream);
     yourConnection.onaddstream = function(e) {
@@ -44,6 +45,14 @@ function setupPeerConnection(stream) {
             });
         }
     };
+
+    yourConnection.ondatachannel = function(event) {
+        var receiveChannel = event.channel;
+        dataChannel.onmessage = function(event) {
+            console.log("ondatachannel message:", event.data);
+        };
+    }; 
+    openDataChannel();
 }
 
 function hasUserMedia() {
@@ -119,10 +128,46 @@ function onCandidate(candidate) {
 };
 
 function onLeave() {
-    yourConnection.removeStream(my_stream);
+    yourConnection.removeStream(stream);
     connectedUser = null;
     yourConnection.close();
     yourConnection.onicecandidate = null;
     yourConnection.onaddstream = null;
-    setupPeerConnection(my_stream);
+    setupPeerConnection(stream);
 };
+
+function openDataChannel() {
+    var dataChannelOptions = {
+        reliable: true
+    };
+
+    dataChannel = yourConnection.createDataChannel("myLabel", dataChannelOptions);
+
+    console.log(dataChannel)
+    dataChannel.onerror = function (error) {
+        console.log("Data Channel Error:", error);
+    };
+
+    dataChannel.onmessage = function (event) {
+        console.log("Got Data Channel Message:", event.data);
+        received.innerHTML += "recv: " + event.data + "<br />";
+        received.scrollTop = received.scrollHeight;
+    };
+
+    dataChannel.onopen = function () {
+        console.log(dataChannel)
+        dataChannel.send(name + " has connected.");
+    };
+
+    dataChannel.onclose = function () {
+        console.log("The Data Channel is Closed");
+    };
+
+}
+
+sendButton.addEventListener("click", function (event) {
+    var val = messageInput.value;
+    received.innerHTML += "send: " + val + "<br />";
+    received.scrollTop = received.scrollHeight;
+    dataChannel.send(val);
+});
