@@ -30,7 +30,10 @@ function setupPeerConnection(stream) {
             //"url": "stun:127.0.0.1:9876"
         }]
     };
-    yourConnection = new RTCPeerConnection(configuration, {optional: [{RtpDataChannels: true}]});
+    yourConnection = new RTCPeerConnection(configuration, 
+        {optional: [{RtpDataChannels: true}]});
+
+
     // Setup stream listening
     yourConnection.addStream(stream);
     yourConnection.onaddstream = function(e) {
@@ -45,14 +48,14 @@ function setupPeerConnection(stream) {
             });
         }
     };
+    openDataChannel();
 
-    yourConnection.ondatachannel = function(event) {
+    /*yourConnection.ondatachannel = function(event) {
         var receiveChannel = event.channel;
         dataChannel.onmessage = function(event) {
             console.log("ondatachannel message:", event.data);
         };
-    }; 
-    openDataChannel();
+    }; */
 }
 
 function hasUserMedia() {
@@ -138,12 +141,13 @@ function onLeave() {
 
 function openDataChannel() {
     var dataChannelOptions = {
-        reliable: true
+        reliable: true,
+        //maxTransmitTime: 3000
     };
 
     dataChannel = yourConnection.createDataChannel("myLabel", dataChannelOptions);
 
-    console.log(dataChannel)
+    //console.log(dataChannel);
     dataChannel.onerror = function (error) {
         console.log("Data Channel Error:", error);
     };
@@ -155,7 +159,8 @@ function openDataChannel() {
     };
 
     dataChannel.onopen = function () {
-        console.log(dataChannel)
+        //console.log("Aqui llego");
+        //console.log(dataChannel);
         dataChannel.send(name + " has connected.");
     };
 
@@ -165,9 +170,13 @@ function openDataChannel() {
 
 }
 
-sendButton.addEventListener("click", function (event) {
-    var val = messageInput.value;
-    received.innerHTML += "send: " + val + "<br />";
-    received.scrollTop = received.scrollHeight;
-    dataChannel.send(val);
-});
+/*function sendMessage(msg) {
+    switch(dataChannel.readyState) {
+        case "open":
+            dataChannel.send(msg);
+            break;
+        default:
+            console.log("An error has occurred Natalia");
+            break;
+    }
+}*/
