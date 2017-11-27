@@ -6,12 +6,15 @@ var loginPage = document.querySelector('#login-page'),
     theirUsernameInput = document.querySelector('#their-username'),
     callButton = document.querySelector('#call'),
     hangUpButton = document.querySelector('#hang-up');
+    messageInput = document.querySelector('#message'),
+    sendButton = document.querySelector('#send'),
+    received = document.querySelector('#received');
 
 callPage.style.display = "none";
 
 var name,
     connectedUser;
-var connection = new WebSocket('wss://192.168.0.11:8888');
+var connection = new WebSocket('wss://172.18.28.139:8888');
 
 connection.onopen = function() {
     console.log("Connected");
