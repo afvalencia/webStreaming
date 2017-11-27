@@ -50,9 +50,12 @@ connection.onmessage = function(message) {
             break;
     }
 };
+
 connection.onerror = function(err) {
     console.log("Got error", err);
 };
+
+
 // Alias for sending messages in JSON format
 function send(message) {
     if (connectedUser) {
@@ -85,4 +88,12 @@ hangUpButton.addEventListener("click", function() {
         type: "leave"
     });
     onLeave();
+});
+
+sendButton.addEventListener("click", function (event) {
+    console.log("send messg");
+    var val = messageInput.value;
+    received.innerHTML += "send: " + val + "<br />";
+    received.scrollTop = received.scrollHeight;
+    dataChannel.send(val);
 });
